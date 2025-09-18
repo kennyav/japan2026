@@ -58,7 +58,7 @@ export async function submitContactForm(formData: FormData) {
 
     await resend.emails.send({
       from: "[Trademarktopia] Consultation Request <noreply@resend.dev>",
-      to: ["tami@serogerslaw.com"], // Replace with your actual email
+      to: ["Tami@serogerslaw.com"], // Replace with your actual email
       subject: `New Consultation Request from ${validatedData.firstName} ${validatedData.lastName}`,
       html: emailHtml,
       replyTo: validatedData.email,

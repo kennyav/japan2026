@@ -4,7 +4,7 @@ import { type Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 
 export const metadata: Metadata = {
-  title: "Trademarktopia",
+  title: "Trademarktopia™",
   description: "Trademark Protection Made Simple",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
