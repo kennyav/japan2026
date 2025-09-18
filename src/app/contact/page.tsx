@@ -203,7 +203,7 @@ export default function ContactPage() {
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <h3 className="font-bold text-foreground mb-4">Trademarktopia</h3>
+              <h3 className="font-bold text-foreground mb-4">Trademarktopia™</h3>
               <p className="text-muted-foreground text-sm">
                 Your trusted partner in trademark protection and intellectual property services.
               </p>
@@ -264,7 +264,7 @@ export default function ContactPage() {
           </div>
 
           <div className="border-t border-border mt-8 pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; 2024 Trademarktopia. All rights reserved.</p>
+            <p>&copy; 2025 Trademarktopia™ also known as TMTopia™. All rights reserved.</p>
           </div>
         </div>
       </footer>
