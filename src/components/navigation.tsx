@@ -21,7 +21,7 @@ export function Navigation() {
       </div>
 
       <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
-        <Link href="/contact">Free Consultation</Link>
+        <Link href="/contact">Book Free Consultation Now</Link>
       </Button>
     </nav>
   )

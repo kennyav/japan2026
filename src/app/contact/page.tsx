@@ -47,7 +47,9 @@ export default function ContactPage() {
                     <div>
                       <h3 className="font-semibold text-card-foreground mb-1">Phone</h3>
                       <p className="text-muted-foreground">(310) 600-5050</p>
-                      <p className="text-sm text-muted-foreground">Mon-Fri, 9:00 AM - 6:00 PM PST</p>
+                      <p className="text-sm text-muted-foreground">Mon-Fri, 9:00 AM - 5:00 PM PST</p>
+                      <p className="text-sm text-muted-foreground">Sat, Office Closed</p>
+                      <p className="text-sm text-muted-foreground">Sun, 11:00 AM - 2:00 PM PST</p>
                     </div>
                   </div>
 
@@ -90,15 +92,15 @@ export default function ContactPage() {
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-card-foreground">Monday - Friday</span>
-                      <span className="text-muted-foreground">9:00 AM - 6:00 PM PST</span>
+                      <span className="text-muted-foreground">9:00 AM - 5:00 PM PST</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-card-foreground">Saturday</span>
-                      <span className="text-muted-foreground">10:00 AM - 2:00 PM PST</span>
+                      <span className="text-muted-foreground">Closed</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-card-foreground">Sunday</span>
-                      <span className="text-muted-foreground">Closed</span>
+                      <span className="text-muted-foreground">11:00 AM - 2:00 PM PST</span>
                     </div>
                   </div>
                 </CardContent>
@@ -115,12 +117,6 @@ export default function ContactPage() {
                       <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
                       <span className="text-muted-foreground">
                         <strong className="text-card-foreground">15+ years</strong> of trademark law experience
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
-                      <span className="text-muted-foreground">
-                        <strong className="text-card-foreground">95% success rate</strong> on office action responses
                       </span>
                     </li>
                     <li className="flex items-start gap-2">

@@ -57,11 +57,10 @@ export function ContactForm() {
       <CardContent className="space-y-6">
         {submitStatus.type && (
           <div
-            className={`p-4 rounded-md flex items-center gap-2 ${
-              submitStatus.type === "success"
+            className={`p-4 rounded-md flex items-center gap-2 ${submitStatus.type === "success"
                 ? "bg-green-50 text-green-800 border border-green-200"
                 : "bg-red-50 text-red-800 border border-red-200"
-            }`}
+              }`}
           >
             {submitStatus.type === "success" ? (
               <CheckCircle className="w-5 h-5" />
@@ -196,6 +195,21 @@ export function ContactForm() {
           >
             {isSubmitting ? "Submitting..." : "Request Free Consultation"}
           </Button>
+          {submitStatus.type && (
+            <div
+              className={`p-4 rounded-md flex items-center gap-2 ${submitStatus.type === "success"
+                  ? "bg-green-50 text-green-800 border border-green-200"
+                  : "bg-red-50 text-red-800 border border-red-200"
+                }`}
+            >
+              {submitStatus.type === "success" ? (
+                <CheckCircle className="w-5 h-5" />
+              ) : (
+                <AlertCircle className="w-5 h-5" />
+              )}
+              <span className="text-sm">{submitStatus.message}</span>
+            </div>
+          )}
         </form>
 
         <div className="text-center text-sm text-muted-foreground">

@@ -30,7 +30,7 @@ export default function HomePage() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
-              <Link href="/contact">Get Free Consultation</Link>
+              <Link href="/contact">Reach Out Now For A Free Consultation</Link>
             </Button>
             <Button asChild variant="outline" size="lg">
               <Link href="/services">View Our Services</Link>
@@ -110,7 +110,7 @@ export default function HomePage() {
             our experts.
           </p>
           <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
-            <Link href="/contact">Schedule Free Consultation</Link>
+            <Link href="/contact">Reach Out Now For A Free Consultation</Link>
           </Button>
         </div>
       </section>
@@ -132,6 +132,11 @@ export default function HomePage() {
                 <li>
                   <Link href="/services" className="hover:text-primary transition-colors">
                     Trademark Search
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/services" className="hover:text-primary transition-colors">
+                  Trademark Filings
                   </Link>
                 </li>
                 <li>
@@ -162,7 +167,7 @@ export default function HomePage() {
                 </li>
                 <li>
                   <Link href="/contact" className="hover:text-primary transition-colors">
-                    Free Consultation
+                    Book Free Consultation
                   </Link>
                 </li>
               </ul>

@@ -64,7 +64,7 @@ export async function submitContactForm(formData: FormData) {
       replyTo: validatedData.email,
     })
 
-    return { success: true, message: "Thank you! We'll contact you within 24 hours." }
+    return { success: true, message: "Successfully submitted! We'll contact you within 24 hours." }
   } catch (error) {
     console.error("[v0] Contact form submission error:", error)
 

@@ -28,16 +28,16 @@ export default function ServicesPage() {
       {/* Services Section */}
       <section className="px-6 py-20">
         <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-3 gap-8 items-stretch">
             {/* Trademark Clearance Search */}
-            <Card className="border-border bg-card hover:shadow-lg transition-shadow">
+            <Card className="border-border bg-card hover:shadow-lg transition-shadow flex flex-col h-full">
               <CardHeader className="text-center pb-4">
                 <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
                   <Search className="w-8 h-8 text-primary" />
                 </div>
                 <CardTitle className="text-2xl text-card-foreground">Trademark Clearance Search</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-6 flex flex-col flex-1">
                 <p className="text-muted-foreground leading-relaxed">
                   Before filing your trademark application, ensure your mark is available with our comprehensive
                   clearance search service. We conduct thorough searches across federal, state, and common law
@@ -70,7 +70,7 @@ export default function ServicesPage() {
                   </ul>
                 </div>
 
-                <div className="bg-secondary/50 p-4 rounded-lg">
+                <div className="bg-secondary/50 p-4 rounded-lg mt-auto">
                   <div className="flex items-center gap-2 mb-2">
                     <Clock className="w-4 h-4 text-primary" />
                     <span className="font-semibold text-card-foreground">Turnaround Time</span>
@@ -78,21 +78,21 @@ export default function ServicesPage() {
                   <p className="text-sm text-muted-foreground">3-5 business days</p>
                 </div>
 
-                <Button asChild className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                <Button asChild className="w-full bg-primary text-primary-foreground hover:bg-primary/90 mt-auto">
                   <Link href="/contact">Request Search</Link>
                 </Button>
               </CardContent>
             </Card>
 
             {/* Trademark Office Actions */}
-            <Card className="border-border bg-card hover:shadow-lg transition-shadow">
+            <Card className="border-border bg-card hover:shadow-lg transition-shadow flex flex-col h-full">
               <CardHeader className="text-center pb-4">
                 <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
                   <AlertTriangle className="w-8 h-8 text-primary" />
                 </div>
                 <CardTitle className="text-2xl text-card-foreground">Trademark Office Actions</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-6 flex flex-col flex-1">
                 <p className="text-muted-foreground leading-relaxed">
                   Received an office action from the USPTO? Don't panic. Our experienced attorneys will analyze the
                   issues and craft a strategic response to overcome any objections and move your application forward.
@@ -124,22 +124,22 @@ export default function ServicesPage() {
                   </ul>
                 </div>
 
-                <div className="bg-secondary/50 p-4 rounded-lg">
+                <div className="bg-secondary/50 p-4 rounded-lg mt-auto">
                   <div className="flex items-center gap-2 mb-2">
                     <Shield className="w-4 h-4 text-primary" />
                     <span className="font-semibold text-card-foreground">Success Rate</span>
                   </div>
-                  <p className="text-sm text-muted-foreground">95% of office actions successfully resolved</p>
+                  <p className="text-sm text-muted-foreground">Turnaround Time - 3-5 business days</p>
                 </div>
 
-                <Button asChild className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                <Button asChild className="w-full bg-primary text-primary-foreground hover:bg-primary/90 mt-auto">
                   <Link href="/contact">Get Help Now</Link>
                 </Button>
               </CardContent>
             </Card>
 
             {/* Post-Registration Renewal */}
-            <Card className="border-border bg-card hover:shadow-lg transition-shadow">
+            <Card className="border-border bg-card hover:shadow-lg transition-shadow flex flex-col h-full">
               <CardHeader className="text-center pb-4">
                 <div className="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
                   <RefreshCw className="w-8 h-8 text-primary" />
@@ -148,7 +148,7 @@ export default function ServicesPage() {
                   Post-Registration Renewal & Declaration of Use
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-6 flex flex-col flex-1">
                 <p className="text-muted-foreground leading-relaxed">
                   Maintain your trademark protection with our renewal and declaration of use filing services. We ensure
                   your trademark remains active and enforceable by meeting all USPTO deadlines and requirements.
@@ -167,20 +167,16 @@ export default function ServicesPage() {
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                      Combined Section 8 & 9 filings
+                      Combined Section 8 & 15 filings
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                       Deadline monitoring and reminders
                     </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                      Specimen preparation and filing
-                    </li>
                   </ul>
                 </div>
 
-                <div className="bg-secondary/50 p-4 rounded-lg">
+                <div className="bg-secondary/50 p-4 rounded-lg mt-auto">
                   <div className="flex items-center gap-2 mb-2">
                     <Clock className="w-4 h-4 text-primary" />
                     <span className="font-semibold text-card-foreground">Never Miss a Deadline</span>
@@ -188,7 +184,7 @@ export default function ServicesPage() {
                   <p className="text-sm text-muted-foreground">Automated tracking and advance notifications</p>
                 </div>
 
-                <Button asChild className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                <Button asChild className="w-full bg-primary text-primary-foreground hover:bg-primary/90 mt-auto">
                   <Link href="/contact">Protect Your Mark</Link>
                 </Button>
               </CardContent>
