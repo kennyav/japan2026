@@ -265,6 +265,11 @@ export default function ServicesPage() {
                 </li>
                 <li>
                   <Link href="/services" className="hover:text-primary transition-colors">
+                  Trademark Filings
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/services" className="hover:text-primary transition-colors">
                     Office Actions
                   </Link>
                 </li>

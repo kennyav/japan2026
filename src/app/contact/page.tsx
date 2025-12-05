@@ -215,6 +215,11 @@ export default function ContactPage() {
                 </li>
                 <li>
                   <a href="/services" className="hover:text-primary transition-colors">
+                  Trademark Filings
+                  </a>
+                </li>
+                <li>
+                  <a href="/services" className="hover:text-primary transition-colors">
                     Office Actions
                   </a>
                 </li>
