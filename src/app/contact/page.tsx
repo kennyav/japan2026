@@ -1,4 +1,3 @@
-import { Navigation } from "~/components/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card"
 import { Phone, Mail, MapPin, Clock } from "lucide-react"
 import { ContactForm } from "~/components/contact-form"
@@ -6,7 +5,6 @@ import { ContactForm } from "~/components/contact-form"
 export default function ContactPage() {
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
 
       {/* Hero Section */}
       <section className="px-6 py-16 text-center bg-secondary/30">
@@ -48,8 +46,7 @@ export default function ContactPage() {
                       <h3 className="font-semibold text-card-foreground mb-1">Phone</h3>
                       <p className="text-muted-foreground">(310) 600-5050</p>
                       <p className="text-sm text-muted-foreground">Mon-Fri, 9:00 AM - 5:00 PM PST</p>
-                      <p className="text-sm text-muted-foreground">Sat, Office Closed</p>
-                      <p className="text-sm text-muted-foreground">Sun, 11:00 AM - 2:00 PM PST</p>
+                      <p className="text-sm text-muted-foreground">Sat & Sun, Office Closed</p>
                     </div>
                   </div>
 
@@ -95,12 +92,8 @@ export default function ContactPage() {
                       <span className="text-muted-foreground">9:00 AM - 5:00 PM PST</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-card-foreground">Saturday</span>
-                      <span className="text-muted-foreground">Closed</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-card-foreground">Sunday</span>
-                      <span className="text-muted-foreground">11:00 AM - 2:00 PM PST</span>
+                      <span className="text-card-foreground">Saturday & Sunday</span>
+                      <span className="text-muted-foreground">Office Closed</span>
                     </div>
                   </div>
                 </CardContent>
@@ -193,82 +186,6 @@ export default function ContactPage() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="px-6 py-12 border-t border-border">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="font-bold text-foreground mb-4">Trademarktopia™</h3>
-              <p className="text-muted-foreground text-sm">
-                Your trusted partner in trademark protection and intellectual property services.
-              </p>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-foreground mb-4">Services</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <a href="/services" className="hover:text-primary transition-colors">
-                    Trademark Search
-                  </a>
-                </li>
-                <li>
-                  <a href="/services" className="hover:text-primary transition-colors">
-                  Trademark Filings
-                  </a>
-                </li>
-                <li>
-                  <a href="/services" className="hover:text-primary transition-colors">
-                    Office Actions
-                  </a>
-                </li>
-                <li>
-                  <a href="/services" className="hover:text-primary transition-colors">
-                    Renewals
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-foreground mb-4">Company</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <a href="/" className="hover:text-primary transition-colors">
-                    About
-                  </a>
-                </li>
-                <li>
-                  <a href="/contact" className="hover:text-primary transition-colors">
-                    Contact
-                  </a>
-                </li>
-                <li>
-                  <a href="/contact" className="hover:text-primary transition-colors">
-                    Free Consultation
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-foreground mb-4">Contact</h4>
-              <p className="text-sm text-muted-foreground">
-                Ready to protect your brand?
-                <br />
-                <a href="/contact" className="text-primary hover:underline">
-                  Get started today
-                </a>
-              </p>
-            </div>
-          </div>
-
-          <div className="border-t border-border mt-8 pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; 2025 Trademarktopia™ also known as TMTopia™. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

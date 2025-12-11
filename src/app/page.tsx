@@ -1,4 +1,3 @@
-import { Navigation } from "~/components/navigation"
 import { Button } from "~/components/ui/button"
 import { Card, CardContent } from "~/components/ui/card"
 import Link from "next/link"
@@ -7,15 +6,14 @@ import { Shield, Search, FileText, Users } from "lucide-react"
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
 
       {/* Hero Section */}
       <section className="px-6 py-20 text-center">
         <div className="max-w-4xl mx-auto">
-          <div className="inline-flex items-center px-4 py-2 rounded-full bg-secondary text-secondary-foreground text-sm mb-8">
+          {/* <div className="inline-flex items-center px-4 py-2 rounded-full bg-secondary text-secondary-foreground text-sm mb-8">
             <span className="w-2 h-2 bg-primary rounded-full mr-2"></span>
             Protecting Your Brand Since 2010
-          </div>
+          </div> */}
 
           <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 text-balance">
             Trademark Protection
@@ -114,82 +112,6 @@ export default function HomePage() {
           </Button>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="px-6 py-12 border-t border-border">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="font-bold text-foreground mb-4">Trademarktopia</h3>
-              <p className="text-muted-foreground text-sm">
-                Your trusted partner in trademark protection and intellectual property services.
-              </p>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-foreground mb-4">Services</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <Link href="/services" className="hover:text-primary transition-colors">
-                    Trademark Search
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/services" className="hover:text-primary transition-colors">
-                  Trademark Filings
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/services" className="hover:text-primary transition-colors">
-                    Office Actions
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/services" className="hover:text-primary transition-colors">
-                    Renewals
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-foreground mb-4">Company</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <Link href="/" className="hover:text-primary transition-colors">
-                    About
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/contact" className="hover:text-primary transition-colors">
-                    Contact
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/contact" className="hover:text-primary transition-colors">
-                    Book Free Consultation
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-foreground mb-4">Contact</h4>
-              <p className="text-sm text-muted-foreground">
-                Ready to protect your brand?
-                <br />
-                <Link href="/contact" className="text-primary hover:underline">
-                  Get started today
-                </Link>
-              </p>
-            </div>
-          </div>
-
-          <div className="border-t border-border mt-8 pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; 2025 Trademarktopia™ also known as TMTopia™. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

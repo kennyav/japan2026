@@ -2,6 +2,8 @@ import "~/styles/globals.css";
 
 import { type Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
+import Footer from "~/components/footer";
+import { Navigation } from "~/components/navigation";
 
 export const metadata: Metadata = {
   title: "Trademarktopia™",
@@ -15,7 +17,11 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${GeistSans.variable}`}>
-      <body>{children}</body>
+      <body>
+        <Navigation />
+        {children}
+        <Footer />
+      </body>
     </html>
   );
 }
