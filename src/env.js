@@ -8,6 +8,8 @@ export const env = createEnv({
    */
   server: {
     NODE_ENV: z.enum(["development", "test", "production"]),
+    /** Optional email for Nominatim User-Agent (recommended in production). */
+    GEOCODING_CONTACT_EMAIL: z.string().email().optional(),
   },
 
   /**
@@ -26,6 +28,7 @@ export const env = createEnv({
    */
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
+    GEOCODING_CONTACT_EMAIL: process.env.GEOCODING_CONTACT_EMAIL,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   },

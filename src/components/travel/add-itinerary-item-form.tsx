@@ -79,24 +79,71 @@ export function AddItineraryItemForm({ tripId }: Props) {
           placeholder="Meet at the east gate, bring water, emotional support…"
         />
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="item-location">Where (optional)</Label>
-          <Input
-            id="item-location"
-            name="location"
-            placeholder="Neighborhood or station"
-          />
+      <div className="space-y-2">
+        <Label htmlFor="item-location">Where (optional)</Label>
+        <Input
+          id="item-location"
+          name="location"
+          placeholder="Neighborhood or station"
+        />
+      </div>
+      <div className="rounded-xl border-2 border-primary/15 bg-card/50 p-4 space-y-3">
+        <div>
+          <p className="font-display text-sm font-semibold text-foreground">
+            Globe pin (optional)
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Add an address <span className="font-medium">or</span> latitude and
+            longitude. If you use both, coordinates win. Address search uses
+            OpenStreetMap.
+          </p>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="item-link">Link (optional)</Label>
-          <Input
-            id="item-link"
-            name="link"
-            type="url"
-            placeholder="Maps, booking, TikTok rabbit hole…"
+          <Label htmlFor="item-map-address">Address or place name</Label>
+          <Textarea
+            id="item-map-address"
+            name="map_address"
+            rows={2}
+            className="rounded-xl border-2 resize-y min-h-[4rem]"
+            placeholder="e.g. Fushimi Inari Taisha, Kyoto"
+            autoComplete="street-address"
           />
         </div>
+        <p className="text-[11px] text-muted-foreground leading-snug">
+          Or paste coordinates (Google Maps: right-click → first two numbers =
+          lat, then lng).
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="item-latitude">Latitude</Label>
+            <Input
+              id="item-latitude"
+              name="latitude"
+              inputMode="decimal"
+              placeholder="e.g. 35.0116"
+              autoComplete="off"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="item-longitude">Longitude</Label>
+            <Input
+              id="item-longitude"
+              name="longitude"
+              inputMode="decimal"
+              placeholder="e.g. 135.7681"
+              autoComplete="off"
+            />
+          </div>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="item-link">Link (optional)</Label>
+        <Input
+          id="item-link"
+          name="link"
+          type="url"
+          placeholder="Maps, booking, TikTok rabbit hole…"
+        />
       </div>
       {error ? (
         <p className="text-destructive text-sm" role="alert">
