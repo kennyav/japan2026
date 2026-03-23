@@ -1,117 +1,120 @@
-import { Button } from "~/components/ui/button"
-import { Card, CardContent } from "~/components/ui/card"
-import Link from "next/link"
-import { Shield, Search, FileText, Users } from "lucide-react"
+import Link from "next/link";
+import { Button } from "~/components/ui/button";
+import { Card, CardContent } from "~/components/ui/card";
+import { Calendar, ListChecks, MapPin, Sparkles, Users } from "lucide-react";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-background">
-
-      {/* Hero Section */}
-      <section className="px-6 py-20 text-center">
-        <div className="max-w-4xl mx-auto">
-          {/* <div className="inline-flex items-center px-4 py-2 rounded-full bg-secondary text-secondary-foreground text-sm mb-8">
-            <span className="w-2 h-2 bg-primary rounded-full mr-2"></span>
-            Protecting Your Brand Since 2010
-          </div> */}
-
-          <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 text-balance">
-            Trademark Protection
-            <br />
-            <span className="text-primary">Made Simple</span>
+    <div className="min-h-screen">
+      <section className="page-shell-x py-16 text-center sm:py-24">
+        <div className="mx-auto max-w-4xl">
+          <p className="font-display mb-4 inline-flex items-center gap-2 rounded-full bg-secondary px-4 py-1.5 text-sm font-semibold text-secondary-foreground">
+            <Sparkles className="h-4 w-4 text-primary" />
+            Squad trip planning, but make it cute
+          </p>
+          <h1 className="font-display text-balance text-4xl font-bold leading-tight text-foreground sm:text-6xl md:text-7xl">
+            Japan 2026
+            <span className="mt-2 block bg-gradient-to-r from-primary via-[oklch(0.55_0.2_320)] to-[oklch(0.55_0.18_200)] bg-clip-text text-transparent">
+              let&apos;s figure it out together
+            </span>
           </h1>
 
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto text-pretty leading-relaxed">
-            Secure your brand with expert trademark services. From clearance searches to registration and renewal, we
-            guide you through every step of protecting your intellectual property.
+          <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-muted-foreground sm:text-xl">
+            Dump your wildest ideas, ramen stops, and &ldquo;maybe we should
+            sleep&rdquo; hotels in one place—then tap if you&apos;re in, booked,
+            or bowing out so nobody has to @ everyone twice.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
-              <Link href="/contact">Reach Out Now For A Free Consultation</Link>
+          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
+            <Button asChild size="lg">
+              <Link href="/login">Sign in &amp; peek the trips</Link>
             </Button>
             <Button asChild variant="outline" size="lg">
-              <Link href="/services">View Our Services</Link>
+              <Link href="/services">Wait, how does this work?</Link>
             </Button>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="px-6 py-16">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-foreground mb-4">Why Choose Trademarktopia</h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              We provide comprehensive trademark services with the expertise and personal attention your brand deserves.
+      <section className="page-shell-x py-12 sm:py-16">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-12 text-center">
+            <h2 className="font-display text-3xl font-bold text-foreground sm:text-4xl">
+              Four things we actually use
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-lg text-muted-foreground">
+              Less scrolling the group chat for that one Google Maps link from
+              Tuesday.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <Card className="text-center p-6 border-border bg-card">
-              <CardContent className="pt-6">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <Search className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="font-semibold text-card-foreground mb-2">Comprehensive Searches</h3>
-                <p className="text-muted-foreground text-sm">
-                  Thorough trademark clearance searches to ensure your mark is available for registration.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center p-6 border-border bg-card">
-              <CardContent className="pt-6">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <Shield className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="font-semibold text-card-foreground mb-2">Expert Protection</h3>
-                <p className="text-muted-foreground text-sm">
-                  Professional handling of office actions and trademark disputes to protect your rights.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center p-6 border-border bg-card">
-              <CardContent className="pt-6">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <FileText className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="font-semibold text-card-foreground mb-2">Renewal Services</h3>
-                <p className="text-muted-foreground text-sm">
-                  Timely renewal and declaration of use filings to maintain your trademark protection.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center p-6 border-border bg-card">
-              <CardContent className="pt-6">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <Users className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="font-semibold text-card-foreground mb-2">Personal Service</h3>
-                <p className="text-muted-foreground text-sm">
-                  Dedicated support throughout your trademark journey with personalized attention.
-                </p>
-              </CardContent>
-            </Card>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                icon: MapPin,
+                title: "Trips as buckets",
+                body: "Name it, date it-ish, and you’ve got a home for that leg of the adventure.",
+                tilt: "-rotate-1",
+              },
+              {
+                icon: ListChecks,
+                title: "Idea pile",
+                body: "Activities, beds, trains, snacks—stack it all with links so we’re not hunting DMs.",
+                tilt: "rotate-1",
+              },
+              {
+                icon: Users,
+                title: "Vibe check",
+                body: "Interested / booked / nah—counts show what the group actually wants.",
+                tilt: "-rotate-1",
+              },
+              {
+                icon: Calendar,
+                title: "Google = easy",
+                body: "Sign in once. No new password living rent-free in your brain.",
+                tilt: "rotate-1",
+              },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+              <Card
+                key={item.title}
+                className={`text-center transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg ${item.tilt} hover:rotate-0`}
+              >
+                <CardContent className="pt-8">
+                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-secondary text-primary">
+                    <Icon className="h-7 w-7" strokeWidth={2.25} />
+                  </div>
+                  <h3 className="font-display text-lg font-bold text-card-foreground">
+                    {item.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    {item.body}
+                  </p>
+                </CardContent>
+              </Card>
+            );
+            })}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="px-6 py-20 bg-secondary/50">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-foreground mb-4">Ready to Protect Your Brand?</h2>
-          <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
-            Don't wait until it's too late. Start your trademark protection journey today with a free consultation from
-            our experts.
+      <section className="page-shell-x pb-16 sm:pb-20">
+        <div className="mx-auto max-w-4xl rounded-3xl bg-gradient-to-br from-secondary/80 via-accent/50 to-primary/15 px-5 py-14 text-center sm:px-10 sm:py-16">
+        <div className="mx-auto max-w-2xl">
+          <h2 className="font-display text-3xl font-bold text-foreground">
+            Your turn—add something weird &amp; wonderful
+          </h2>
+          <p className="mt-3 text-lg text-muted-foreground">
+            Sign in, open Trips, and throw your best ideas on the board. Worst
+            case we laugh and pass.
           </p>
-          <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
-            <Link href="/contact">Reach Out Now For A Free Consultation</Link>
+          <Button asChild size="lg" className="mt-8">
+            <Link href="/trips">Take me to trips</Link>
           </Button>
+        </div>
         </div>
       </section>
     </div>
-  )
+  );
 }
