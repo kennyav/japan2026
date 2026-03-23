@@ -11,8 +11,8 @@ const navLink =
 
 export function Navigation() {
   return (
-    <nav className="sticky top-0 z-50 border-b border-primary/10 bg-card/70 page-shell-x py-3 backdrop-blur-md supports-[backdrop-filter]:bg-card/55">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
+    <nav className="page-gutter-x sticky top-0 z-50 border-b border-primary/10 bg-card/70 py-3 backdrop-blur-md supports-[backdrop-filter]:bg-card/55">
+      <div className="mx-auto flex w-full max-w-screen-2xl items-center justify-between gap-3">
         <Link
           href="/"
           className="font-display flex items-center gap-2 text-xl font-bold tracking-tight text-foreground md:text-2xl"

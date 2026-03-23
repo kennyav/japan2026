@@ -140,4 +140,14 @@
   .page-shell-x {
     @apply px-4 sm:px-6;
   }
+
+  /** Shared horizontal gutters for wide app pages (nav + trip detail align) */
+  .page-gutter-x {
+    @apply px-5 sm:px-8 lg:px-12 xl:px-16 2xl:px-20;
+  }
+
+  /** Trip detail: wide max width + generous gutters (matches .page-gutter-x) */
+  .page-shell-wide {
+    @apply px-5 py-12 sm:px-8 sm:py-16 lg:px-12 xl:px-16 2xl:px-20;
+  }
 }

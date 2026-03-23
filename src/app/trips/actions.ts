@@ -87,6 +87,52 @@ async function resolveGlobePinFromForm(formData: FormData): Promise<
   return { ok: true, lat: null, lng: null };
 }
 
+function parseOptionalPriceLevel(
+  raw: string,
+): { ok: true; value: number | null } | { ok: false; error: string } {
+  const s = raw.trim();
+  if (!s) return { ok: true, value: null };
+  const n = Number(s);
+  if (!Number.isInteger(n) || n < 1 || n > 4) {
+    return { ok: false, error: "Price level must be between 1 and 4 ($–$$$$)." };
+  }
+  return { ok: true, value: n };
+}
+
+function parseOptionalMoney(
+  raw: string,
+  label: string,
+): { ok: true; value: number | null } | { ok: false; error: string } {
+  const s = raw.trim();
+  if (!s) return { ok: true, value: null };
+  const n = Number(s);
+  if (!Number.isFinite(n) || n < 0) {
+    return { ok: false, error: `${label} must be a number zero or greater.` };
+  }
+  if (n > 99_999_999.99) {
+    return { ok: false, error: `${label} is too large.` };
+  }
+  return { ok: true, value: Math.round(n * 100) / 100 };
+}
+
+function pricingFromForm(formData: FormData):
+  | {
+      ok: true;
+      price_level: number | null;
+      total_cost: number | null;
+    }
+  | { ok: false; error: string } {
+  const level = parseOptionalPriceLevel(formString(formData, "price_level"));
+  if (!level.ok) return level;
+  const total = parseOptionalMoney(formString(formData, "total_cost"), "Total cost");
+  if (!total.ok) return total;
+  return {
+    ok: true,
+    price_level: level.value,
+    total_cost: total.value,
+  };
+}
+
 export async function createTrip(formData: FormData) {
   const supabase = await createClient();
   const {
@@ -144,6 +190,9 @@ export async function createItineraryItem(tripId: string, formData: FormData) {
   const pin = await resolveGlobePinFromForm(formData);
   if (!pin.ok) return { error: pin.error };
 
+  const pricing = pricingFromForm(formData);
+  if (!pricing.ok) return { error: pricing.error };
+
   let location = formString(formData, "location").trim() || null;
   if (!location && pin.displayNameFromGeocode) {
     location =
@@ -161,8 +210,73 @@ export async function createItineraryItem(tripId: string, formData: FormData) {
     link: formString(formData, "link").trim() || null,
     latitude: pin.lat,
     longitude: pin.lng,
+    price_level: pricing.price_level,
+    total_cost: pricing.total_cost,
     created_by: user.id,
   });
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/trips/${tripId}`);
+  return { ok: true as const };
+}
+
+export async function updateItineraryItem(
+  tripId: string,
+  itemId: string,
+  formData: FormData,
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const title = formString(formData, "title").trim();
+  if (!title) return { error: "Add a title." };
+
+  const typeRaw = formString(formData, "type") || "activity";
+  const allowed = [
+    "activity",
+    "hotel",
+    "transport",
+    "meal",
+    "other",
+  ] as const;
+  const type = allowed.includes(typeRaw as (typeof allowed)[number])
+    ? typeRaw
+    : "activity";
+
+  const pin = await resolveGlobePinFromForm(formData);
+  if (!pin.ok) return { error: pin.error };
+
+  const pricing = pricingFromForm(formData);
+  if (!pricing.ok) return { error: pricing.error };
+
+  let location = formString(formData, "location").trim() || null;
+  if (!location && pin.displayNameFromGeocode) {
+    location =
+      pin.displayNameFromGeocode.length > 400
+        ? `${pin.displayNameFromGeocode.slice(0, 397)}…`
+        : pin.displayNameFromGeocode;
+  }
+
+  const { error } = await supabase
+    .from("itinerary_items")
+    .update({
+      type,
+      title,
+      description: formString(formData, "description").trim() || null,
+      location,
+      link: formString(formData, "link").trim() || null,
+      latitude: pin.lat,
+      longitude: pin.lng,
+      price_level: pricing.price_level,
+      total_cost: pricing.total_cost,
+    })
+    .eq("id", itemId)
+    .eq("trip_id", tripId)
+    .eq("created_by", user.id);
 
   if (error) return { error: error.message };
 

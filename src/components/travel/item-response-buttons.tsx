@@ -7,26 +7,25 @@ import { cn } from "~/lib/utils";
 
 import { setItemResponse } from "~/app/trips/actions";
 
-type Status = "interested" | "booked" | "not_interested";
+type Status = "interested" | "not_interested";
 
 type Props = {
   itemId: string;
   tripId: string;
+  /** Highlight; legacy `booked` is treated as no selection until they pick again. */
   current: Status | null;
 };
 
-const choices: { status: Status; label: string; activeClass: string }[] = [
+const choices: {
+  status: Status;
+  label: string;
+  activeClass: string;
+}[] = [
   {
     status: "interested",
     label: "🙌 Into it",
     activeClass:
       "border-transparent bg-gradient-to-r from-rose-400 to-orange-400 text-white shadow-md hover:from-rose-400/90 hover:to-orange-400/90",
-  },
-  {
-    status: "booked",
-    label: "✅ Booked",
-    activeClass:
-      "border-transparent bg-gradient-to-r from-emerald-400 to-teal-500 text-white shadow-md hover:from-emerald-400/90 hover:to-teal-500/90",
   },
   {
     status: "not_interested",

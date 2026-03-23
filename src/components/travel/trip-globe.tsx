@@ -1,7 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MutableRefObject,
+} from "react";
 import Globe, { type GlobeMethods } from "react-globe.gl";
+import { X } from "lucide-react";
+import { Button } from "~/components/ui/button";
 import { Label } from "~/components/ui/label";
 import { cn } from "~/lib/utils";
 import {
@@ -19,6 +28,7 @@ export type GlobePin = {
   lat: number;
   lng: number;
   location: string | null;
+  link: string | null;
 };
 
 const typeEmoji: Record<string, string> = {
@@ -145,16 +155,26 @@ function altitudeForPins(pins: GlobePin[]): number {
 }
 
 /**
- * Lower camera altitude = zoomed in → larger marker on screen.
- * Tuned so pins stay readable on street-level zoom without dominating the globe when far out.
+ * Lower camera altitude = zoomed in → larger marker on screen (capped so pins
+ * stay a bit smaller when close in and don’t cover the map tiles).
  */
 function altitudeToPinScale(altitude: number): number {
   const a = Math.max(0.032, Math.min(12, altitude));
-  const raw = 0.4 / Math.pow(a, 0.36);
-  return Math.min(1.55, Math.max(0.34, raw));
+  const raw = 0.33 / Math.pow(a, 0.36);
+  return Math.min(1.18, Math.max(0.32, raw));
 }
 
-type Props = { pins: GlobePin[]; layout?: "default" | "fill" };
+type Props = {
+  pins: GlobePin[];
+  layout?: "default" | "fill";
+  /** Full-screen map: shown next to map style, centered over the globe. */
+  onExitFullscreen?: () => void;
+  /**
+   * When set (full-screen map), assigned to `fly to pin by itinerary id` so the
+   * idea list can focus the camera.
+   */
+  focusPinByIdRef?: MutableRefObject<((itemId: string) => void) | null>;
+};
 
 /** Target width for pin art on screen; height follows native aspect ratio. */
 const TRIP_PIN_DISPLAY_W_PX = 48;
@@ -246,7 +266,12 @@ function transformOriginForAnchor(ax: number, ay: number): string {
   return `${xPct} ${yPct}`;
 }
 
-export function TripGlobe({ pins, layout = "default" }: Props) {
+export function TripGlobe({
+  pins,
+  layout = "default",
+  onExitFullscreen,
+  focusPinByIdRef,
+}: Props) {
   const isFill = layout === "fill";
   const globeRef = useRef<GlobeMethods | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -256,6 +281,8 @@ export function TripGlobe({ pins, layout = "default" }: Props) {
   const selectPinRef = useRef<((p: GlobePin) => void) | null>(null);
   const smoothPinVisualRef = useRef({ scale: 1, lift: 0 });
   const pinSmoothRafRef = useRef<number | null>(null);
+  const pinsRef = useRef(pins);
+  pinsRef.current = pins;
 
   selectPinRef.current = (p) => setSelected(p);
 
@@ -426,6 +453,7 @@ export function TripGlobe({ pins, layout = "default" }: Props) {
         lat: pin.lat,
         lng: pin.lng,
         location: pin.location,
+        link: pin.link,
       });
     });
 
@@ -472,6 +500,28 @@ export function TripGlobe({ pins, layout = "default" }: Props) {
     };
   }, []);
 
+  useEffect(() => {
+    if (!focusPinByIdRef) return;
+    focusPinByIdRef.current = (itemId: string) => {
+      const pin = pinsRef.current.find((p) => p.id === itemId);
+      if (!pin) return;
+      const g = globeRef.current;
+      if (!g) return;
+      const altBase =
+        pinsRef.current.length <= 1
+          ? altitudeForPins(pinsRef.current)
+          : 0.1;
+      /** List fly-to: 2× closer than the usual single-pin framing (lower altitude = zoomed in). */
+      const alt = Math.max(0.03, altBase / 10);
+      g.pointOfView({ lat: pin.lat, lng: pin.lng, altitude: alt }, 1400);
+      selectPinRef.current?.(pin);
+      kickPinSmooth();
+    };
+    return () => {
+      focusPinByIdRef.current = null;
+    };
+  }, [focusPinByIdRef, kickPinSmooth]);
+
   return (
     <div
       className={cn(
@@ -479,52 +529,41 @@ export function TripGlobe({ pins, layout = "default" }: Props) {
         isFill && "h-full min-h-0 w-full gap-2",
       )}
     >
-      <div
-        className={cn(
-          "flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between",
-          isFill && "shrink-0 flex-row flex-wrap items-center justify-between gap-2 sm:items-center",
-        )}
-      >
-        <div className={cn("space-y-1", isFill && "space-y-0")}>
-          <Label
-            htmlFor={isFill ? "globe-basemap-fill" : "globe-basemap"}
-            className={cn("text-xs", isFill && "sr-only")}
-          >
-            Map style
-          </Label>
-          <Select
-            value={basemap}
-            onValueChange={(v) => setBasemap(v as BasemapId)}
-          >
-            <SelectTrigger
-              id={isFill ? "globe-basemap-fill" : "globe-basemap"}
-              className={cn(
-                "h-9 w-full rounded-xl border-2 sm:w-[min(100%,280px)]",
-                isFill && "h-8 w-[min(100%,220px)] rounded-lg text-xs sm:w-48",
-              )}
+      {!isFill ? (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div className="space-y-1">
+            <Label htmlFor="globe-basemap" className="text-xs">
+              Map style
+            </Label>
+            <Select
+              value={basemap}
+              onValueChange={(v) => setBasemap(v as BasemapId)}
             >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="osm">{BASEMAPS.osm.label}</SelectItem>
-              <SelectItem value="voyager">{BASEMAPS.voyager.label}</SelectItem>
-              <SelectItem value="positron">{BASEMAPS.positron.label}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        {!isFill ? (
+              <SelectTrigger
+                id="globe-basemap"
+                className="h-9 w-full rounded-xl border-2 sm:w-[min(100%,280px)]"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="osm">{BASEMAPS.osm.label}</SelectItem>
+                <SelectItem value="voyager">{BASEMAPS.voyager.label}</SelectItem>
+                <SelectItem value="positron">{BASEMAPS.positron.label}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <p className="text-[11px] leading-snug text-muted-foreground sm:max-w-xs sm:text-right">
             Map pins scale with zoom; the tip marks the coordinates—click for
             details.
           </p>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
 
       <div
         ref={containerRef}
         className={cn(
           "relative overflow-hidden rounded-2xl border-2 border-primary/15 bg-[#020617] shadow-lg",
-          isFill && "min-h-0 flex-1 rounded-xl border border-primary/20 shadow-none",
+          isFill && "min-h-0 flex-1 rounded-none border-0 shadow-none",
         )}
         style={isFill ? { minHeight: 0 } : { minHeight: dims.h }}
       >
@@ -552,6 +591,53 @@ export function TripGlobe({ pins, layout = "default" }: Props) {
           onZoom={kickPinSmooth}
           onGlobeReady={onGlobeReady}
         />
+        {isFill ? (
+          <div className="pointer-events-none absolute inset-x-0 top-3 z-30 flex justify-center px-3">
+            <div className="pointer-events-auto flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-border/60 bg-card/95 px-2.5 py-1.5 shadow-xl backdrop-blur-md">
+              <div className="flex min-w-0 items-center gap-2">
+                <Label htmlFor="globe-basemap-fill" className="sr-only">
+                  Map style
+                </Label>
+                <Select
+                  value={basemap}
+                  onValueChange={(v) => setBasemap(v as BasemapId)}
+                >
+                  <SelectTrigger
+                    id="globe-basemap-fill"
+                    className="h-8 w-[min(100vw-10rem,240px)] shrink-0 rounded-lg border-2 text-xs sm:w-52"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent
+                    className="z-[110]"
+                    position="popper"
+                    sideOffset={4}
+                  >
+                    <SelectItem value="osm">{BASEMAPS.osm.label}</SelectItem>
+                    <SelectItem value="voyager">
+                      {BASEMAPS.voyager.label}
+                    </SelectItem>
+                    <SelectItem value="positron">
+                      {BASEMAPS.positron.label}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {onExitFullscreen ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="shrink-0 rounded-full border border-white/20 bg-slate-950/55 shadow-md backdrop-blur-md hover:bg-slate-950/70"
+                  onClick={onExitFullscreen}
+                >
+                  <X className="mr-1 size-4" />
+                  Exit map
+                </Button>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
         {selected && isFill ? (
           <div className="pointer-events-auto absolute bottom-3 left-3 right-3 z-30 mx-auto max-w-md rounded-xl border border-primary/20 bg-card/95 px-4 py-3 text-sm shadow-xl backdrop-blur-md">
             <p className="font-display font-semibold text-foreground">
@@ -564,6 +650,16 @@ export function TripGlobe({ pins, layout = "default" }: Props) {
             <p className="mt-1 font-mono text-xs text-muted-foreground">
               {selected.lat.toFixed(5)}, {selected.lng.toFixed(5)}
             </p>
+            {selected.link?.trim() ? (
+              <a
+                href={selected.link.trim()}
+                className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-primary underline-offset-4 hover:underline"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Open website ↗
+              </a>
+            ) : null}
           </div>
         ) : null}
       </div>
@@ -597,6 +693,16 @@ export function TripGlobe({ pins, layout = "default" }: Props) {
           <p className="mt-1 font-mono text-xs text-muted-foreground">
             {selected.lat.toFixed(5)}, {selected.lng.toFixed(5)}
           </p>
+          {selected.link?.trim() ? (
+            <a
+              href={selected.link.trim()}
+              className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-primary underline-offset-4 hover:underline"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Open website ↗
+            </a>
+          ) : null}
         </div>
       ) : !selected && !isFill ? (
         <p className="text-center text-xs text-muted-foreground">

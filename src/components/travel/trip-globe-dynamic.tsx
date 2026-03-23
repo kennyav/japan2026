@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import type { MutableRefObject } from "react";
 
 import { cn } from "~/lib/utils";
 
@@ -21,16 +22,31 @@ const TripGlobe = dynamic(
   },
 );
 
-type Props = { pins: GlobePin[]; layout?: "default" | "fill" };
+type Props = {
+  pins: GlobePin[];
+  layout?: "default" | "fill";
+  onExitFullscreen?: () => void;
+  focusPinByIdRef?: MutableRefObject<((itemId: string) => void) | null>;
+};
 
-export function TripGlobeDynamic({ pins, layout = "default" }: Props) {
+export function TripGlobeDynamic({
+  pins,
+  layout = "default",
+  onExitFullscreen,
+  focusPinByIdRef,
+}: Props) {
   return (
     <div
       className={cn(
         layout === "fill" && "flex h-full min-h-0 w-full flex-col",
       )}
     >
-      <TripGlobe pins={pins} layout={layout} />
+      <TripGlobe
+        pins={pins}
+        layout={layout}
+        onExitFullscreen={onExitFullscreen}
+        focusPinByIdRef={focusPinByIdRef}
+      />
     </div>
   );
 }

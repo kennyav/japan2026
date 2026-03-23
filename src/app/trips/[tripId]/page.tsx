@@ -1,16 +1,9 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-
-import { Button } from "~/components/ui/button";
-import { ActivityBookedButton } from "~/components/travel/activity-booked-button";
-import { DeleteItineraryItemButton } from "~/components/travel/delete-itinerary-item-button";
-import { AddItineraryItemForm } from "~/components/travel/add-itinerary-item-form";
-import { ItemCoordinatesForm } from "~/components/travel/item-coordinates-form";
+import { AddIdeaCollapsible } from "~/components/travel/add-idea-collapsible";
+import { ItineraryItemCreatorShell } from "~/components/travel/itinerary-item-creator-shell";
 import { ItemResponseButtons } from "~/components/travel/item-response-buttons";
-import {
-  TripMembersSection,
-  type TripMemberRow,
-} from "~/components/travel/trip-members-section";
+import { TripAdventureHeader } from "~/components/travel/trip-adventure-header";
+import type { TripMemberRow } from "~/components/travel/trip-members-section";
 import { TripGlobeFullScreenLayout } from "~/components/travel/trip-globe-fullscreen-layout";
 import { createClient } from "~/lib/supabase/server";
 
@@ -28,9 +21,24 @@ type ItineraryItem = {
   link: string | null;
   latitude: number | null;
   longitude: number | null;
+  price_level: number | null;
+  total_cost: number | null;
   created_by: string | null;
   item_responses: ItemResponse[] | null;
 };
+
+function numOrNull(v: unknown): number | null {
+  if (v == null) return null;
+  const n = typeof v === "number" ? v : Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function formatMoneyAmount(n: number): string {
+  return n.toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  });
+}
 
 const typeEmoji: Record<string, string> = {
   activity: "🎯",
@@ -52,6 +60,29 @@ type ProfileDbRow = {
   id: string;
   full_name: string | null;
 };
+
+function displayNameForMember(
+  userId: string,
+  profileById: Record<string, { full_name: string | null }>,
+): string {
+  const raw = profileById[userId]?.full_name;
+  const trimmed = typeof raw === "string" ? raw.trim() : "";
+  return trimmed.length > 0 ? trimmed : "Traveler";
+}
+
+function namesInCategory(
+  responses: ItemResponse[] | null | undefined,
+  status: ItemResponse["status"],
+  profileById: Record<string, { full_name: string | null }>,
+): string[] {
+  const names =
+    responses
+      ?.filter((r) => r.status === status)
+      .map((r) => displayNameForMember(r.user_id, profileById)) ?? [];
+  return [...names].sort((a, b) =>
+    a.localeCompare(b, undefined, { sensitivity: "base" }),
+  );
+}
 
 export default async function TripDetailPage({ params }: PageProps) {
   const { tripId } = await params;
@@ -103,20 +134,21 @@ export default async function TripDetailPage({ params }: PageProps) {
   const { data: items, error: itemsError } = await supabase
     .from("itinerary_items")
     .select(
-      "id, type, title, description, location, link, latitude, longitude, created_by, item_responses(user_id, status)",
+      "id, type, title, description, location, link, latitude, longitude, price_level, total_cost, created_by, item_responses(user_id, status)",
     )
     .eq("trip_id", tripId)
     .order("created_at", { ascending: true });
 
   if (itemsError) {
     return (
-      <main className="mx-auto w-full max-w-2xl page-shell">
+      <main className="mx-auto w-full max-w-screen-2xl page-shell-wide">
         <p className="text-destructive text-sm">{itemsError.message}</p>
       </main>
     );
   }
 
   const list = (items ?? []) as ItineraryItem[];
+  const tripTravelerCount = memberList.length;
 
   const globePins = list
     .filter(
@@ -138,6 +170,7 @@ export default async function TripDetailPage({ params }: PageProps) {
       lat: item.latitude,
       lng: item.longitude,
       location: item.location,
+      link: item.link,
     }));
 
   const ideaBoard =
@@ -149,84 +182,165 @@ export default async function TripDetailPage({ params }: PageProps) {
         </p>
       </div>
     ) : (
-      <ul className="space-y-5">
+      <ul className="grid list-none grid-cols-1 gap-5 pl-0 lg:grid-cols-2">
         {list.map((item) => {
           const mine =
             item.item_responses?.find((r) => r.user_id === user.id)?.status ??
             null;
-          const counts = { interested: 0, booked: 0, not_interested: 0 };
-          for (const r of item.item_responses ?? []) {
-            counts[r.status] += 1;
-          }
+          const myTakeForButtons =
+            mine === "interested" || mine === "not_interested" ? mine : null;
+          const namesInterestedRaw = namesInCategory(
+            item.item_responses,
+            "interested",
+            profileById,
+          );
+          const namesBookedLegacy = namesInCategory(
+            item.item_responses,
+            "booked",
+            profileById,
+          );
+          const namesInterested = [...namesInterestedRaw, ...namesBookedLegacy].sort(
+            (a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }),
+          );
+          const namesPassing = namesInCategory(
+            item.item_responses,
+            "not_interested",
+            profileById,
+          );
           const emoji = typeEmoji[item.type] ?? "✨";
-          const isActivity = item.type === "activity";
+          const hasCoords =
+            item.latitude != null &&
+            item.longitude != null &&
+            Number.isFinite(item.latitude) &&
+            Number.isFinite(item.longitude);
+          const isCreator = item.created_by === user.id;
+          const priceLevel = numOrNull(item.price_level);
+          const totalCost = numOrNull(item.total_cost);
+          const editableItem = {
+            id: item.id,
+            type: item.type,
+            title: item.title,
+            description: item.description,
+            location: item.location,
+            link: item.link,
+            latitude: item.latitude,
+            longitude: item.longitude,
+            price_level: priceLevel,
+            total_cost: totalCost,
+          };
+
+          const intoItCount = namesInterested.length;
+
+          const costParts: string[] = [];
+          if (
+            priceLevel != null &&
+            Number.isInteger(priceLevel) &&
+            priceLevel >= 1 &&
+            priceLevel <= 4
+          ) {
+            costParts.push("$".repeat(priceLevel));
+          }
+          if (totalCost != null) {
+            costParts.push(`Total ${formatMoneyAmount(totalCost)}`);
+          }
+
+          const itemBody = (
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-xs font-semibold uppercase tracking-wide text-primary">
+                {emoji} {item.type}
+              </p>
+              <div className="mt-1 flex flex-wrap items-center gap-2 gap-y-2">
+                <h3 className="font-display text-xl font-bold text-foreground">
+                  {item.title}
+                </h3>
+              </div>
+              {item.description ? (
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  {item.description}
+                </p>
+              ) : null}
+              {costParts.length > 0 ? (
+                <p className="mt-2 text-sm font-medium text-foreground">
+                  {costParts.join(" · ")}
+                </p>
+              ) : null}
+              {totalCost != null ? (
+                <div className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                  {intoItCount > 0 ? (
+                    <p>
+                      ~
+                      {formatMoneyAmount(
+                        Math.round((totalCost / intoItCount) * 100) / 100,
+                      )}{" "}
+                      each if {intoItCount}{" "}
+                      {intoItCount === 1 ? "person is" : "people are"} into it
+                    </p>
+                  ) : (
+                    <p>
+                      No one&apos;s into it yet—per-person among interested
+                      shows once people respond.
+                    </p>
+                  )}
+                  {tripTravelerCount > 0 ? (
+                    <p>
+                      ~
+                      {formatMoneyAmount(
+                        Math.round((totalCost / tripTravelerCount) * 100) /
+                          100,
+                      )}{" "}
+                      each if all {tripTravelerCount}{" "}
+                      {tripTravelerCount === 1 ? "traveler" : "travelers"} on
+                      the trip split it
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+              {item.location ? (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  📍 {item.location}
+                </p>
+              ) : null}
+              {hasCoords ? (
+                <p className="mt-1 font-mono text-xs text-muted-foreground">
+                  🌐 {item.latitude!.toFixed(4)},{" "}
+                  {item.longitude!.toFixed(4)}
+                </p>
+              ) : null}
+              {item.link ? (
+                <a
+                  href={item.link}
+                  className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary underline-offset-4 hover:underline"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Open link ↗
+                </a>
+              ) : null}
+            </div>
+          );
+
           return (
                 <li
                   key={item.id}
-                  className="rounded-2xl border-2 border-primary/10 bg-card p-5 shadow-md transition-shadow hover:shadow-lg"
+                  className="min-w-0 rounded-2xl border-2 border-primary/10 bg-card p-5 shadow-md transition-shadow hover:shadow-lg"
+                  {...(hasCoords
+                    ? { "data-globe-focus-item": item.id }
+                    : {})}
                 >
-              <div className="flex flex-wrap items-start justify-between gap-2 sm:gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className="font-display text-xs font-semibold uppercase tracking-wide text-primary">
-                    {emoji} {item.type}
-                  </p>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 gap-y-2">
-                    <h3 className="font-display text-xl font-bold text-foreground">
-                      {item.title}
-                    </h3>
-                    {isActivity ? (
-                      <ActivityBookedButton
-                        itemId={item.id}
-                        tripId={tripId}
-                        current={mine}
-                      />
-                    ) : null}
-                  </div>
-                  {item.description ? (
-                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                      {item.description}
-                    </p>
-                  ) : null}
-                  {item.location ? (
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      📍 {item.location}
-                    </p>
-                  ) : null}
-                  {item.latitude != null &&
-                  item.longitude != null &&
-                  Number.isFinite(item.latitude) &&
-                  Number.isFinite(item.longitude) ? (
-                    <p className="mt-1 font-mono text-xs text-muted-foreground">
-                      🌐 {item.latitude.toFixed(4)},{" "}
-                      {item.longitude.toFixed(4)}
-                    </p>
-                  ) : null}
-                  {item.created_by === user.id ? (
-                    <ItemCoordinatesForm
-                      tripId={tripId}
-                      itemId={item.id}
-                      initialLatitude={item.latitude}
-                      initialLongitude={item.longitude}
-                    />
-                  ) : null}
-                  {item.link ? (
-                    <a
-                      href={item.link}
-                      className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary underline-offset-4 hover:underline"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Open link ↗
-                    </a>
-                  ) : null}
-                </div>
-                {item.created_by === user.id ? (
-                  <DeleteItineraryItemButton
+              <div data-globe-focus-hit="">
+                {isCreator ? (
+                  <ItineraryItemCreatorShell
                     tripId={tripId}
-                    itemId={item.id}
-                    itemTitle={item.title}
-                  />
-                ) : null}
+                    item={editableItem}
+                    hasCoords={hasCoords}
+                  >
+                    {itemBody}
+                  </ItineraryItemCreatorShell>
+                ) : (
+                  <div className="flex flex-wrap items-start justify-between gap-2 sm:gap-3">
+                    {itemBody}
+                  </div>
+                )}
               </div>
               <div className="mt-5 space-y-3 border-t border-primary/10 pt-4">
                 <p className="text-xs font-medium text-muted-foreground">
@@ -235,12 +349,24 @@ export default async function TripDetailPage({ params }: PageProps) {
                 <ItemResponseButtons
                   itemId={item.id}
                   tripId={tripId}
-                  current={mine}
+                  current={myTakeForButtons}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Crew: {counts.interested} into it · {counts.booked} booked ·{" "}
-                  {counts.not_interested} passing
-                </p>
+                <div className="space-y-1.5 text-xs text-muted-foreground">
+                  <p>
+                    <span className="font-semibold text-foreground">
+                      Into it:{" "}
+                    </span>
+                    {namesInterested.length
+                      ? namesInterested.join(", ")
+                      : "—"}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-foreground">
+                      Passing:{" "}
+                    </span>
+                    {namesPassing.length ? namesPassing.join(", ") : "—"}
+                  </p>
+                </div>
               </div>
             </li>
           );
@@ -248,28 +374,26 @@ export default async function TripDetailPage({ params }: PageProps) {
       </ul>
     );
 
+  const metaParts = [trip.destination, trip.start_date, trip.end_date] as (
+    | string
+    | null
+  )[];
+  const tripMeta =
+    metaParts.filter((x): x is string => typeof x === "string" && x.length > 0).join(
+      " · ",
+    ) || "Drop dates & place whenever—no pressure";
+
   return (
-    <main className="mx-auto w-full max-w-3xl space-y-12 page-shell">
-      <div className="space-y-2">
-        <Button asChild variant="ghost" size="sm" className="-ml-2 rounded-full">
-          <Link href="/trips">← All trips</Link>
-        </Button>
-        <p className="font-display text-sm font-semibold text-primary">
-          This adventure
-        </p>
-        <h1 className="font-display text-4xl font-bold text-foreground">
-          {trip.title}
-        </h1>
-        <p className="text-muted-foreground">
-          {[trip.destination, trip.start_date, trip.end_date]
-            .filter(Boolean)
-            .join(" · ") || "Drop dates & place whenever—no pressure"}
-        </p>
-      </div>
+    <main className="mx-auto w-full max-w-screen-2xl space-y-12 page-shell-wide">
+      <TripAdventureHeader
+        tripTitle={typeof trip.title === "string" ? trip.title : ""}
+        tripMeta={tripMeta}
+        tripId={tripId}
+        members={members}
+        isOwner={isOwner}
+      />
 
-      <TripMembersSection tripId={tripId} members={members} isOwner={isOwner} />
-
-      <AddItineraryItemForm tripId={tripId} />
+      <AddIdeaCollapsible tripId={tripId} />
 
       <TripGlobeFullScreenLayout
         pins={globePins}

@@ -21,6 +21,7 @@ type Props = { tripId: string };
 export function AddItineraryItemForm({ tripId }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [type, setType] = useState("activity");
+  const [priceLevel, setPriceLevel] = useState<string>("");
   const [isPending, startTransition] = useTransition();
 
   return (
@@ -28,6 +29,7 @@ export function AddItineraryItemForm({ tripId }: Props) {
       className="space-y-5 rounded-2xl border-2 border-dashed border-primary/25 bg-gradient-to-br from-accent/40 to-secondary/30 p-6 shadow-inner"
       action={(fd) => {
         fd.set("type", type);
+        fd.set("price_level", priceLevel);
         setError(null);
         startTransition(async () => {
           const res = await createItineraryItem(tripId, fd);
@@ -87,6 +89,40 @@ export function AddItineraryItemForm({ tripId }: Props) {
           placeholder="Neighborhood or station"
         />
       </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="item-price-level">Price vibe (optional)</Label>
+          <Select
+            value={priceLevel === "" ? "none" : priceLevel}
+            onValueChange={(v) => setPriceLevel(v === "none" ? "" : v)}
+          >
+            <SelectTrigger id="item-price-level" className="w-full rounded-xl border-2">
+              <SelectValue placeholder="Not set" />
+            </SelectTrigger>
+            <SelectContent className="z-[60]">
+              <SelectItem value="none">Not set</SelectItem>
+              <SelectItem value="1">$</SelectItem>
+              <SelectItem value="2">$$</SelectItem>
+              <SelectItem value="3">$$$</SelectItem>
+              <SelectItem value="4">$$$$</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="item-total-cost">Total cost (optional)</Label>
+          <Input
+            id="item-total-cost"
+            name="total_cost"
+            inputMode="decimal"
+            placeholder="e.g. 120"
+            autoComplete="off"
+          />
+        </div>
+      </div>
+      <p className="text-[11px] text-muted-foreground leading-snug">
+        Dollar signs are a rough spend hint. Total is in your trip currency; we
+        show per-person splits from who’s into it vs. everyone on the trip.
+      </p>
       <div className="rounded-xl border-2 border-primary/15 bg-card/50 p-4 space-y-3">
         <div>
           <p className="font-display text-sm font-semibold text-foreground">

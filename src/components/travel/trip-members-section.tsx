@@ -1,3 +1,7 @@
+"use client";
+
+import { cn } from "~/lib/utils";
+
 import { AddTripMemberForm } from "~/components/travel/add-trip-member-form";
 
 export type TripMemberRow = {
@@ -6,22 +10,33 @@ export type TripMemberRow = {
   displayName: string;
 };
 
-type Props = {
+type PanelProps = {
   tripId: string;
   members: TripMemberRow[];
   isOwner: boolean;
+  className?: string;
 };
 
-export function TripMembersSection({ tripId, members, isOwner }: Props) {
+export function TripMembersPanel({
+  tripId,
+  members,
+  isOwner,
+  className,
+}: PanelProps) {
   return (
-    <section className="rounded-2xl border-2 border-primary/10 bg-card p-5 shadow-md">
-      <h2 className="font-display text-xl font-bold text-foreground">
+    <div
+      className={cn(
+        "rounded-2xl border-2 border-primary/10 bg-card p-4 shadow-md sm:p-5",
+        className,
+      )}
+    >
+      <h2 className="font-display text-lg font-bold text-foreground sm:text-xl">
         Who&apos;s on this trip
       </h2>
-      <p className="text-muted-foreground mt-1 text-sm">
+      <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
         Owners can invite more people by the Google email they use to sign in.
       </p>
-      <ul className="mt-4 space-y-2">
+      <ul className="mt-3 space-y-2 sm:mt-4">
         {members.map((m) => (
           <li
             key={m.userId}
@@ -33,6 +48,6 @@ export function TripMembersSection({ tripId, members, isOwner }: Props) {
         ))}
       </ul>
       {isOwner ? <AddTripMemberForm tripId={tripId} /> : null}
-    </section>
+    </div>
   );
 }

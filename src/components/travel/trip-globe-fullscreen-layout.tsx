@@ -1,8 +1,15 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
-import { Maximize2, X } from "lucide-react";
+import { Maximize2 } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
 import { TripGlobeDynamic } from "~/components/travel/trip-globe-dynamic";
@@ -21,8 +28,28 @@ export function TripGlobeFullScreenLayout({
 }: Props) {
   const [full, setFull] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const focusPinByIdRef = useRef<((itemId: string) => void) | null>(null);
 
   useEffect(() => setMounted(true), []);
+
+  const onFullscreenIdeaBoardClick = useCallback(
+    (e: MouseEvent<HTMLDivElement>) => {
+      const t = e.target as HTMLElement;
+      if (
+        t.closest(
+          "button, a, input, textarea, select, [role='combobox'], [role='listbox']",
+        )
+      ) {
+        return;
+      }
+      const li = t.closest("li[data-globe-focus-item]");
+      if (!li || !t.closest("[data-globe-focus-hit]")) return;
+      const id = li.getAttribute("data-globe-focus-item");
+      if (!id) return;
+      focusPinByIdRef.current?.(id);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!full) return;
@@ -54,39 +81,21 @@ export function TripGlobeFullScreenLayout({
             aria-label="Full screen trip map"
           >
             <div className="absolute inset-0 z-0 h-full w-full">
-              <TripGlobeDynamic pins={pins} layout="fill" />
+              <TripGlobeDynamic
+                pins={pins}
+                layout="fill"
+                onExitFullscreen={() => setFull(false)}
+                focusPinByIdRef={focusPinByIdRef}
+              />
             </div>
 
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              className="absolute right-3 top-3 z-30 rounded-full border border-white/20 bg-slate-950/55 text-foreground shadow-lg backdrop-blur-md hover:bg-slate-950/70"
-              onClick={() => setFull(false)}
-            >
-              <X className="mr-1 size-4" />
-              Exit map
-            </Button>
-
             <aside className="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-3 pb-4 pt-2 lg:inset-x-auto lg:bottom-4 lg:left-4 lg:top-4 lg:w-[min(400px,40vw)] lg:px-0 lg:pb-4 lg:pt-4">
-              <div className="pointer-events-auto mx-auto flex h-[min(46vh,440px)] max-h-[min(50vh,480px)] w-full min-h-0 flex-col gap-3 lg:h-full lg:max-h-none">
-                <div className="flex shrink-0 items-center justify-between gap-2 rounded-2xl border border-border/60 bg-card/95 px-3 py-2.5 shadow-xl backdrop-blur-sm">
-                  <h2 className="font-display text-base font-bold text-foreground sm:text-lg">
-                    Idea board
-                  </h2>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="shrink-0 rounded-full"
-                    onClick={() => setFull(false)}
-                    aria-label="Exit full screen map"
-                  >
-                    <X className="size-4" />
-                    <span className="ml-1 hidden sm:inline">Close</span>
-                  </Button>
-                </div>
-                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-2 pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="pointer-events-auto mx-auto flex h-[min(46vh,440px)] max-h-[min(50vh,480px)] w-full min-h-0 flex-col lg:h-full lg:max-h-none">
+                <div
+                  role="presentation"
+                  className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl bg-transparent p-3 pb-2 pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>div]:!border-0 [&_li[data-globe-focus-item]>[data-globe-focus-hit]]:cursor-pointer [&_ul>li]:!border-0"
+                  onClick={onFullscreenIdeaBoardClick}
+                >
                   {ideaBoard}
                 </div>
               </div>
