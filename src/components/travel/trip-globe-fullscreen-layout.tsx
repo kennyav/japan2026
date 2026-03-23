@@ -19,12 +19,15 @@ type Props = {
   pins: GlobePin[];
   globeEmpty: ReactNode;
   ideaBoard: ReactNode;
+  /** When set, the full-screen map sidebar uses this list (e.g. no item modals). Defaults to `ideaBoard`. */
+  ideaBoardOverlay?: ReactNode;
 };
 
 export function TripGlobeFullScreenLayout({
   pins,
   globeEmpty,
   ideaBoard,
+  ideaBoardOverlay,
 }: Props) {
   const [full, setFull] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -70,6 +73,7 @@ export function TripGlobeFullScreenLayout({
   }, [full]);
 
   const hasPins = pins.length > 0;
+  const overlayBoard = ideaBoardOverlay ?? ideaBoard;
 
   const overlay =
     full && mounted && hasPins
@@ -89,14 +93,14 @@ export function TripGlobeFullScreenLayout({
               />
             </div>
 
-            <aside className="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-3 pb-4 pt-2 lg:inset-x-auto lg:bottom-4 lg:left-4 lg:top-4 lg:w-[min(400px,40vw)] lg:px-0 lg:pb-4 lg:pt-4">
-              <div className="pointer-events-auto mx-auto flex h-[min(46vh,440px)] max-h-[min(50vh,480px)] w-full min-h-0 flex-col lg:h-full lg:max-h-none">
+            <aside className="pointer-events-none absolute z-20 hidden lg:inset-x-auto lg:bottom-4 lg:left-4 lg:top-4 lg:block lg:w-[min(400px,40vw)] lg:px-0 lg:pb-4 lg:pt-4">
+              <div className="pointer-events-auto mx-auto flex h-full min-h-0 w-full max-w-full flex-col">
                 <div
                   role="presentation"
-                  className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl bg-transparent p-3 pb-2 pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>div]:!border-0 [&_li[data-globe-focus-item]>[data-globe-focus-hit]]:cursor-pointer [&_ul>li]:!border-0"
+                  className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl bg-transparent p-3 pb-2 pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>div]:!border-0 [&_li[data-globe-focus-item]>[data-globe-focus-hit]]:cursor-pointer [&_ul>li]:!border-0 [&_ul]:!grid-cols-1"
                   onClick={onFullscreenIdeaBoardClick}
                 >
-                  {ideaBoard}
+                  {overlayBoard}
                 </div>
               </div>
             </aside>

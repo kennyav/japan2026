@@ -313,6 +313,105 @@ export async function updateItineraryItemCoordinates(
   return { ok: true as const };
 }
 
+export async function listItineraryItemComments(
+  tripId: string,
+  itemId: string,
+): Promise<
+  | { comments: { id: string; body: string; createdAt: string; authorName: string }[] }
+  | { error: string }
+> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sign in required." };
+
+  const { data: itemRow, error: itemErr } = await supabase
+    .from("itinerary_items")
+    .select("id")
+    .eq("id", itemId)
+    .eq("trip_id", tripId)
+    .maybeSingle();
+
+  if (itemErr || !itemRow) return { error: "Could not load this idea." };
+
+  const { data: rows, error } = await supabase
+    .from("itinerary_item_comments")
+    .select("id, body, created_at, user_id")
+    .eq("item_id", itemId)
+    .order("created_at", { ascending: true });
+
+  if (error) return { error: error.message };
+
+  type CommentRow = {
+    id: string;
+    body: string;
+    created_at: string;
+    user_id: string;
+  };
+  type ProfileRow = { id: string; full_name: string | null };
+
+  const list = (rows ?? []) as CommentRow[];
+  const userIds = [...new Set(list.map((r) => r.user_id))];
+  const nameById: Record<string, string> = {};
+  if (userIds.length) {
+    const { data: profs } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .in("id", userIds);
+    for (const p of (profs ?? []) as ProfileRow[]) {
+      const raw = p.full_name;
+      const t = typeof raw === "string" ? raw.trim() : "";
+      nameById[p.id] = t.length > 0 ? t : "Traveler";
+    }
+  }
+
+  const comments = list.map((r) => ({
+    id: r.id,
+    body: r.body,
+    createdAt: r.created_at,
+    authorName: nameById[r.user_id] ?? "Traveler",
+  }));
+
+  return { comments };
+}
+
+export async function addItineraryItemComment(
+  tripId: string,
+  itemId: string,
+  formData: FormData,
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const body = formString(formData, "body").trim();
+  if (!body) return { error: "Write something first." };
+  if (body.length > 4000) return { error: "Comment is too long." };
+
+  const { data: itemRow } = await supabase
+    .from("itinerary_items")
+    .select("id")
+    .eq("id", itemId)
+    .eq("trip_id", tripId)
+    .maybeSingle();
+
+  if (!itemRow) return { error: "Not found." };
+
+  const { error } = await supabase.from("itinerary_item_comments").insert({
+    item_id: itemId,
+    user_id: user.id,
+    body,
+  });
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/trips/${tripId}`);
+  return { ok: true as const };
+}
+
 export async function deleteItineraryItem(tripId: string, itemId: string) {
   const supabase = await createClient();
   const {
