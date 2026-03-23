@@ -21,14 +21,6 @@ export type GlobePin = {
   location: string | null;
 };
 
-const typeColor: Record<string, string> = {
-  activity: "#2563eb",
-  hotel: "#ea580c",
-  transport: "#9333ea",
-  meal: "#ca8a04",
-  other: "#64748b",
-};
-
 const typeEmoji: Record<string, string> = {
   activity: "🎯",
   hotel: "🏨",
@@ -66,11 +58,12 @@ type BasemapId = keyof typeof BASEMAPS;
 
 type HtmlPinDatum = GlobePin & {
   emoji: string;
-  color: string;
 };
 
-/** Marker on root element — scene traverse sets CSS2D anchor to bottom-center (pin tip). */
+/** Marker on root element — scene traverse sets CSS2D anchor from data-trip-pin-cx/cy. */
 const TRIP_PIN_ROOT_ATTR = "data-trip-globe-pin";
+const TRIP_PIN_CX_ATTR = "data-trip-pin-cx";
+const TRIP_PIN_CY_ATTR = "data-trip-pin-cy";
 /** Inner wrapper: scale/lift updated on the DOM directly so zoom does not recreate HTML markers. */
 const TRIP_PIN_INNER_ATTR = "data-trip-globe-inner";
 
@@ -117,8 +110,12 @@ function alignTripPinCss2DAnchors(
     if (!o.isCSS2DObject || !o.center?.set) return;
     const el = o.element;
     if (el?.getAttribute(TRIP_PIN_ROOT_ATTR) !== "true") return;
-    // (0.5, 0) = bottom-center — map-pin tip (Three.js: y=0 is bottom of element).
-    o.center.set(0.5, 0);
+    const cx = Number.parseFloat(el.getAttribute(TRIP_PIN_CX_ATTR) ?? "0.5");
+    const cy = Number.parseFloat(el.getAttribute(TRIP_PIN_CY_ATTR) ?? "1");
+    o.center.set(
+      Number.isFinite(cx) ? cx : 0.5,
+      Number.isFinite(cy) ? cy : 1,
+    );
   });
 }
 
@@ -159,107 +156,94 @@ function altitudeToPinScale(altitude: number): number {
 
 type Props = { pins: GlobePin[]; layout?: "default" | "fill" };
 
-let tripPinSvgGradientSerial = 0;
+/** Target width for pin art on screen; height follows native aspect ratio. */
+const TRIP_PIN_DISPLAY_W_PX = 48;
 
-/**
- * Physical pushpin: colored plastic head + metallic needle to a sharp tip (anchored at tip).
- */
-function createMapPinSvg(headColor: string): SVGSVGElement {
-  const sid = ++tripPinSvgGradientSerial;
-  const headGradId = `trip-pin-head-${sid}`;
-  const metalGradId = `trip-pin-metal-${sid}`;
+type PinVisual = {
+  src: string;
+  nativeW: number;
+  nativeH: number;
+  /**
+   * CSS2D anchor on the marker box (normalized 0–1). Three.js CSS2DObject:
+   * x=0 left, x=1 right; y=0 top, y=1 bottom — set on the needle tip / map contact.
+   */
+  anchorX: number;
+  anchorY: number;
+  /** Emoji overlay position (% of marker box), head area of the 3D pin. */
+  emojiLeftPct: string;
+  emojiTopPct: string;
+};
 
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox", "0 0 28 52");
-  svg.setAttribute("width", "24");
-  svg.setAttribute("height", "44");
-  svg.setAttribute("aria-hidden", "true");
-  svg.style.display = "block";
-  svg.style.filter = "drop-shadow(0 2px 4px rgb(0 0 0 / 0.4))";
+/** Remove.bg PNGs — anchors tuned for needle tip at bottom-left / bottom of art. */
+const PIN_VISUAL_BY_TYPE: Record<string, PinVisual> = {
+  activity: {
+    src: "/images/pins/activity.png",
+    nativeW: 308,
+    nativeH: 398,
+    anchorX: 0.1,
+    anchorY: 0.96,
+    emojiLeftPct: "58%",
+    emojiTopPct: "14%",
+  },
+  hotel: {
+    src: "/images/pins/hotel.png",
+    nativeW: 520,
+    nativeH: 454,
+    anchorX: 0.12,
+    anchorY: 0.95,
+    emojiLeftPct: "52%",
+    emojiTopPct: "12%",
+  },
+  transport: {
+    src: "/images/pins/transport.png",
+    nativeW: 368,
+    nativeH: 470,
+    anchorX: 0.1,
+    anchorY: 0.96,
+    emojiLeftPct: "56%",
+    emojiTopPct: "13%",
+  },
+  meal: {
+    src: "/images/pins/meal.png",
+    nativeW: 264,
+    nativeH: 386,
+    anchorX: 0.14,
+    anchorY: 0.95,
+    emojiLeftPct: "54%",
+    emojiTopPct: "15%",
+  },
+  other: {
+    src: "/images/pins/other.png",
+    nativeW: 294,
+    nativeH: 588,
+    anchorX: 0.12,
+    anchorY: 0.97,
+    emojiLeftPct: "55%",
+    emojiTopPct: "10%",
+  },
+  /** Fallback for unknown types — sphere asset; anchor under the ball. */
+  sphere: {
+    src: "/images/pins/sphere.png",
+    nativeW: 268,
+    nativeH: 288,
+    anchorX: 0.5,
+    anchorY: 0.88,
+    emojiLeftPct: "50%",
+    emojiTopPct: "38%",
+  },
+};
 
-  const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+function pinVisualForType(type: string): PinVisual {
+  const hit = PIN_VISUAL_BY_TYPE[type];
+  if (hit) return hit;
+  return PIN_VISUAL_BY_TYPE.sphere!;
+}
 
-  const headGrad = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
-  headGrad.setAttribute("id", headGradId);
-  headGrad.setAttribute("x1", "0%");
-  headGrad.setAttribute("y1", "0%");
-  headGrad.setAttribute("x2", "100%");
-  headGrad.setAttribute("y2", "100%");
-  const h1 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-  h1.setAttribute("offset", "0%");
-  h1.setAttribute("stop-color", headColor);
-  h1.setAttribute("stop-opacity", "1");
-  const h2 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-  h2.setAttribute("offset", "100%");
-  h2.setAttribute("stop-color", headColor);
-  h2.setAttribute("stop-opacity", "0.72");
-  headGrad.appendChild(h1);
-  headGrad.appendChild(h2);
-
-  const metalGrad = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
-  metalGrad.setAttribute("id", metalGradId);
-  metalGrad.setAttribute("x1", "0%");
-  metalGrad.setAttribute("y1", "0%");
-  metalGrad.setAttribute("x2", "100%");
-  metalGrad.setAttribute("y2", "0%");
-  const m1 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-  m1.setAttribute("offset", "0%");
-  m1.setAttribute("stop-color", "#9ca3af");
-  const m2 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-  m2.setAttribute("offset", "50%");
-  m2.setAttribute("stop-color", "#e5e7eb");
-  const m3 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-  m3.setAttribute("offset", "100%");
-  m3.setAttribute("stop-color", "#6b7280");
-  metalGrad.appendChild(m1);
-  metalGrad.appendChild(m2);
-  metalGrad.appendChild(m3);
-
-  defs.appendChild(headGrad);
-  defs.appendChild(metalGrad);
-  svg.appendChild(defs);
-
-  // Steel needle: flares slightly under the head, tapers to a point at the map.
-  const needle = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  needle.setAttribute(
-    "d",
-    "M14 52 L5.5 43 L9 21.5 L14 19.5 L19 21.5 L22.5 43 Z",
-  );
-  needle.setAttribute("fill", `url(#${metalGradId})`);
-  needle.setAttribute("stroke", "rgba(0,0,0,0.28)");
-  needle.setAttribute("stroke-width", "0.6");
-  needle.setAttribute("stroke-linejoin", "miter");
-
-  // Plastic head (sits on top of the needle).
-  const head = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-  head.setAttribute("cx", "14");
-  head.setAttribute("cy", "11.5");
-  head.setAttribute("r", "9.25");
-  head.setAttribute("fill", `url(#${headGradId})`);
-  head.setAttribute("stroke", "rgba(255,255,255,0.92)");
-  head.setAttribute("stroke-width", "1.1");
-
-  const shine = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
-  shine.setAttribute("cx", "10.5");
-  shine.setAttribute("cy", "8");
-  shine.setAttribute("rx", "3.2");
-  shine.setAttribute("ry", "2.2");
-  shine.setAttribute("fill", "#fff");
-  shine.setAttribute("opacity", "0.38");
-
-  const socket = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-  socket.setAttribute("cx", "14");
-  socket.setAttribute("cy", "11.5");
-  socket.setAttribute("r", "5.35");
-  socket.setAttribute("fill", "#fafafa");
-  socket.setAttribute("stroke", "rgba(0,0,0,0.08)");
-  socket.setAttribute("stroke-width", "0.45");
-
-  svg.appendChild(needle);
-  svg.appendChild(head);
-  svg.appendChild(shine);
-  svg.appendChild(socket);
-  return svg;
+/** CSS transform-origin matches Three CSS2D anchor (y=0 top, y=1 bottom). */
+function transformOriginForAnchor(ax: number, ay: number): string {
+  const xPct = `${Math.round(ax * 1000) / 10}%`;
+  const yPct = `${Math.round(ay * 1000) / 10}%`;
+  return `${xPct} ${yPct}`;
 }
 
 export function TripGlobe({ pins, layout = "default" }: Props) {
@@ -352,16 +336,21 @@ export function TripGlobe({ pins, layout = "default" }: Props) {
       pins.map((p) => ({
         ...p,
         emoji: typeEmoji[p.type] ?? "✨",
-        color: typeColor[p.type] ?? "#64748b",
       })),
     [pins],
   );
 
   const buildHtmlElement = useCallback((d: object) => {
     const pin = d as HtmlPinDatum;
+    const pv = pinVisualForType(pin.type);
+    const displayH =
+      (pv.nativeH / pv.nativeW) * TRIP_PIN_DISPLAY_W_PX;
+
     // Root: CSS2DRenderer overwrites element.style.transform every frame — no transform here.
     const root = document.createElement("div");
     root.setAttribute(TRIP_PIN_ROOT_ATTR, "true");
+    root.setAttribute(TRIP_PIN_CX_ATTR, String(pv.anchorX));
+    root.setAttribute(TRIP_PIN_CY_ATTR, String(pv.anchorY));
     root.style.cssText = [
       "pointer-events:auto",
       "cursor:pointer",
@@ -371,35 +360,46 @@ export function TripGlobe({ pins, layout = "default" }: Props) {
 
     const inner = document.createElement("div");
     inner.setAttribute(TRIP_PIN_INNER_ATTR, "true");
-    const v = smoothPinVisualRef.current;
+    const vis = smoothPinVisualRef.current;
     inner.style.cssText = [
-      "display:flex",
-      "flex-direction:column",
-      "align-items:center",
-      `transform:translateY(-${v.lift}px) scale(${v.scale})`,
-      "transform-origin:center bottom",
+      "display:block",
+      `transform:translateY(-${vis.lift}px) scale(${vis.scale})`,
+      `transform-origin:${transformOriginForAnchor(pv.anchorX, pv.anchorY)}`,
       "will-change:transform",
     ].join(";");
 
     const marker = document.createElement("div");
     marker.style.cssText = [
       "position:relative",
-      "width:24px",
-      "height:44px",
+      `width:${TRIP_PIN_DISPLAY_W_PX}px`,
+      `min-height:${displayH}px`,
       "flex-shrink:0",
       "line-height:0",
     ].join(";");
 
-    marker.appendChild(createMapPinSvg(pin.color));
+    const img = document.createElement("img");
+    img.src = pv.src;
+    img.alt = "";
+    img.draggable = false;
+    img.setAttribute("aria-hidden", "true");
+    img.style.cssText = [
+      "display:block",
+      `width:${TRIP_PIN_DISPLAY_W_PX}px`,
+      "height:auto",
+      "vertical-align:top",
+      "pointer-events:none",
+    ].join(";");
+
+    marker.appendChild(img);
 
     const emoji = document.createElement("span");
     emoji.textContent = pin.emoji;
     emoji.style.cssText = [
       "position:absolute",
-      "left:50%",
-      "top:22%",
+      `left:${pv.emojiLeftPct}`,
+      `top:${pv.emojiTopPct}`,
       "transform:translate(-50%,-50%)",
-      "font-size:11px",
+      "font-size:10px",
       "line-height:1",
       "pointer-events:none",
       "user-select:none",
