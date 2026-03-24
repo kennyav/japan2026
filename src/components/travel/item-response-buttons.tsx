@@ -12,7 +12,7 @@ type Status = "interested" | "not_interested";
 type Props = {
   itemId: string;
   tripId: string;
-  /** Highlight; legacy `booked` is treated as no selection until they pick again. */
+  /** Booked is controlled separately in the card header. */
   current: Status | null;
 };
 
@@ -44,8 +44,15 @@ export function ItemResponseButtons({ itemId, tripId, current }: Props) {
     });
   }
 
+  const statusLabel =
+    current === "interested"
+      ? "You are into this idea."
+      : current === "not_interested"
+        ? "You are passing on this idea."
+        : undefined;
+
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2" aria-label={statusLabel}>
       {choices.map(({ status, label, activeClass }) => {
         const isOn = current === status;
         return (

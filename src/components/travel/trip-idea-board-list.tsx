@@ -7,6 +7,7 @@ import {
   IdeaItemModalTrigger,
   type IdeaItemModalSummary,
 } from "~/components/travel/idea-item-modal";
+import { ItemBookedToggle } from "~/components/travel/item-booked-toggle";
 import { ItemResponseButtons } from "~/components/travel/item-response-buttons";
 import { Label } from "~/components/ui/label";
 import {
@@ -142,20 +143,16 @@ function IdeaBoardItemCard({
     item.item_responses?.find((r) => r.user_id === userId)?.status ?? null;
   const myTakeForButtons =
     mine === "interested" || mine === "not_interested" ? mine : null;
-  const namesInterestedRaw = namesInCategory(
+  const namesInterested = namesInCategory(
     item.item_responses,
     "interested",
     profileById,
   );
-  const namesBookedLegacy = namesInCategory(
+  const namesBooked = namesInCategory(
     item.item_responses,
     "booked",
     profileById,
   );
-  const namesInterested = [
-    ...namesInterestedRaw,
-    ...namesBookedLegacy,
-  ].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
   const namesPassing = namesInCategory(
     item.item_responses,
     "not_interested",
@@ -183,7 +180,8 @@ function IdeaBoardItemCard({
     total_cost: totalCost,
   };
 
-  const intoItCount = namesInterested.length;
+  /** Interested + booked both count as “in” for split estimates. */
+  const intoOrBookedCount = namesInterested.length + namesBooked.length;
 
   const costParts: string[] = [];
   if (
@@ -200,13 +198,20 @@ function IdeaBoardItemCard({
 
   const itemBody = (
     <div className="min-w-0 flex-1">
-      <p className="font-display text-xs font-semibold uppercase tracking-wide text-primary">
-        {emoji} {item.type}
-      </p>
-      <div className="mt-1 flex flex-wrap items-center gap-2 gap-y-2">
-        <h3 className="font-display text-xl font-bold text-foreground">
-          {item.title}
-        </h3>
+      <div className="mb-3 flex flex-col gap-3 border-b border-primary/10 pb-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <div className="min-w-0 flex-1">
+          <p className="font-display text-xs font-semibold uppercase tracking-wide text-primary">
+            {emoji} {item.type}
+          </p>
+          <h3 className="mt-1 font-display text-xl font-bold text-foreground">
+            {item.title}
+          </h3>
+        </div>
+        <ItemBookedToggle
+          itemId={item.id}
+          tripId={tripId}
+          isBooked={mine === "booked"}
+        />
       </div>
       {item.description ? (
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
@@ -220,18 +225,19 @@ function IdeaBoardItemCard({
       ) : null}
       {totalCost != null ? (
         <div className="mt-1 space-y-0.5 text-xs text-muted-foreground">
-          {intoItCount > 0 ? (
+          {intoOrBookedCount > 0 ? (
             <p>
               ~
               {formatMoneyAmount(
-                Math.round((totalCost / intoItCount) * 100) / 100,
+                Math.round((totalCost / intoOrBookedCount) * 100) / 100,
               )}{" "}
-              each if {intoItCount}{" "}
-              {intoItCount === 1 ? "person is" : "people are"} into it
+              each if {intoOrBookedCount}{" "}
+              {intoOrBookedCount === 1 ? "person is" : "people are"} into it or
+              booked
             </p>
           ) : (
             <p>
-              No one&apos;s into it yet—per-person among interested shows once
+              No one&apos;s into it or booked yet—per-person split shows once
               people respond.
             </p>
           )}
@@ -323,6 +329,10 @@ function IdeaBoardItemCard({
             {namesInterested.length ? namesInterested.join(", ") : "—"}
           </p>
           <p>
+            <span className="font-semibold text-foreground">Booked: </span>
+            {namesBooked.length ? namesBooked.join(", ") : "—"}
+          </p>
+          <p>
             <span className="font-semibold text-foreground">Passing: </span>
             {namesPassing.length ? namesPassing.join(", ") : "—"}
           </p>
@@ -348,7 +358,7 @@ export function TripIdeaBoardList({
 }: Props) {
   const modalEnabled = variant === "page";
 
-  const [groupMode, setGroupMode] = useState<GroupMode>("flat");
+  const [groupMode, setGroupMode] = useState<GroupMode>("type");
   const [filterType, setFilterType] = useState<string>(ALL);
   const [filterLocation, setFilterLocation] = useState<string>(ALL);
 

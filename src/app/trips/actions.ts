@@ -458,6 +458,60 @@ export async function setItemResponse(
   return { ok: true as const };
 }
 
+export async function clearItemResponse(itemId: string, tripId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: itemRow, error: itemErr } = await supabase
+    .from("itinerary_items")
+    .select("id")
+    .eq("id", itemId)
+    .eq("trip_id", tripId)
+    .maybeSingle();
+
+  if (itemErr || !itemRow) return { error: "Not found." };
+
+  const { data: deleted, error: delErr } = await supabase
+    .from("item_responses")
+    .delete()
+    .eq("item_id", itemId)
+    .eq("user_id", user.id)
+    .select("item_id");
+
+  if (delErr) return { error: delErr.message };
+
+  if (deleted?.length) {
+    revalidatePath(`/trips/${tripId}`);
+    return { ok: true as const };
+  }
+
+  /* RLS often allows update but not delete until migration 010 runs — fall back so “un-book” still works. */
+  const { data: updated, error: updErr } = await supabase
+    .from("item_responses")
+    .update({
+      status: "interested",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("item_id", itemId)
+    .eq("user_id", user.id)
+    .eq("status", "booked")
+    .select("item_id");
+
+  if (updErr) return { error: updErr.message };
+  if (!updated?.length) {
+    return {
+      error:
+        "Could not clear your booking. Try again, or confirm Supabase migration 010 (delete policy on item_responses) is applied.",
+    };
+  }
+
+  revalidatePath(`/trips/${tripId}`);
+  return { ok: true as const };
+}
+
 type RpcMemberResult = { ok: boolean; error?: string };
 
 export async function addTripMemberByEmail(tripId: string, emailRaw: string) {
